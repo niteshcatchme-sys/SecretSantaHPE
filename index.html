@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HPE Secret Santa 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #b30000, #006400);
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: white;
+      font-size: 1em;
+      animation-name: fall;
+      animation-duration: 10s;
+      animation-iteration-count: infinite;
+      z-index: 1;
+      user-select: none;
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh); }
+    }
+    .confetti {
+      position: fixed;
+      top: -10px;
+      font-size: 22px;
+      animation: confetti-fall 3s linear forwards;
+      z-index: 3;
+      user-select: none;
+    }
+    @keyframes confetti-fall {
+      to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+    .card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      z-index: 2;
+    }
+    h1 { margin-top: 0; }
+    .date { font-weight: bold; margin-bottom: 20px; }
+    input, textarea, button {
+      padding: 10px;
+      margin-top: 10px;
+      width: 90%;
+      max-width: 360px;
+    }
+    textarea { height: 90px; }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #006400;
+      color: white;
+    }
+    button.secondary {
+      background: #555;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .small-link {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #adminPanel { display: none; margin-top: 20px; }
+    table { border-collapse: collapse; margin: 15px auto; }
+    th, td { border: 1px solid #aaa; padding: 8px 12px; }
+  </style>
+</head>
+<body>
+
+<script>
+  for (let i = 0; i < 30; i++) {
+    let snow = document.createElement("div");
+    snow.className = "snowflake";
+    snow.innerHTML = "❄";
+    snow.style.left = Math.random() * 100 + "vw";
+    snow.style.animationDuration = 5 + Math.random() * 5 + "s";
+    snow.style.fontSize = 10 + Math.random() * 20 + "px";
+    document.body.appendChild(snow);
+  }
+
+  function confettiBlast() {
+    for (let i = 0; i < 25; i++) {
+      let c = document.createElement("div");
+      c.className = "confetti";
+      c.innerHTML = ["🎉","🎁","⭐","❄️"][Math.floor(Math.random()*4)];
+      c.style.left = Math.random() * 100 + "vw";
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3000);
+    }
+  }
+</script>
+
+<div class="card">
+  <h1>🎅 Secret Santa 2025 🎄</h1>
+  <div class="date">📅 Event Date: 10th December 2025</div>
+
+  <div id="participantView">
+    <input id="nameInput" placeholder="Enter your name">
+    <br>
+    <button onclick="revealPick()">Reveal</button>
+    <div id="userResult" class="result"></div>
+    <div class="small-link" onclick="showAdminLogin()">Admin Login</div>
+  </div>
+
+  <div id="adminLogin" style="display:none;">
+    <input type="password" id="adminPassInput" placeholder="Admin Password">
+    <br>
+    <button onclick="loginAdmin()">Login</button>
+    <button class="secondary" onclick="backToUser()">Cancel</button>
+  </div>
+
+  <div id="adminPanel">
+    <h3>🛠 Admin Panel</h3>
+    <textarea id="participantInput" placeholder="Comma separated names"></textarea><br>
+    <button onclick="generateAssignments()">✅ Generate</button>
+    <button onclick="showAdminResults()">📋 View Results</button>
+    <button onclick="exportCSV()">⬇️ Export CSV</button>
+    <button onclick="resetEvent()">♻️ Reset</button>
+    <button class="secondary" onclick="logoutAdmin()">🚪 Logout</button>
+    <div id="adminResult"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzx2YPLAPeSkoC1HLMzerlozGRkBuGops4LOENX6dnl00MrRSfj6Spx1t6nvVqO4cyH/exec";
+const ADMIN_PASSWORD = "Santa2025";
+
+async function callApi(payload) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return res.text();
+}
+
+async function revealPick() {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) return;
+  document.getElementById("userResult").innerText = "Checking...";
+  try {
+    const result = await callApi({ action: "reveal", name });
+    if (result === "NOT_FOUND") {
+      document.getElementById("userResult").innerText = "❌ Name not found!";
+    } else {
+      document.getElementById("userResult").innerHTML =
+        "🎁 You are Secret Santa for:<br><b>" + result + "</b>";
+      confettiBlast();
+    }
+  } catch (e) {
+    document.getElementById("userResult").innerText = "Server error";
+  }
+}
+
+function showAdminLogin() {
+  document.getElementById("participantView").style.display = "none";
+  document.getElementById("adminLogin").style.display = "block";
+}
+
+function backToUser() {
+  document.getElementById("adminLogin").style.display = "none";
+  document.getElementById("participantView").style.display = "block";
+}
+
+function loginAdmin() {
+  const pass = document.getElementById("adminPassInput").value;
+  if (pass !== ADMIN_PASSWORD) {
+    alert("Wrong password");
+    return;
+  }
+  document.getElementById("adminLogin").style.display = "none";
+  document.getElementById("adminPanel").style.display = "block";
+}
+
+function logoutAdmin() {
+  document.getElementById("adminPanel").style.display = "none";
+  document.getElementById("participantView").style.display = "block";
+}
+
+async function generateAssignments() {
+  const raw = document.getElementById("participantInput").value;
+  const people = raw.split(",").map(x => x.trim()).filter(x => x);
+  if (people.length < 2) return alert("Need at least 2 participants");
+  if (!confirm("Generate new assignments?")) return;
+  try {
+    await callApi({ action: "generate", people });
+    alert("✅ Assignments generated");
+  } catch (e) {
+    alert("Generate failed");
+  }
+}
+
+async function showAdminResults() {
+  try {
+    const text = await callApi({ action: "results" });
+    const rows = JSON.parse(text);
+    let table = "<table><tr><th>Person</th><th>Assigned To</th><th>Revealed</th></tr>";
+    for (let i = 1; i < rows.length; i++) {
+      table += `<tr><td>${rows[i][0]}</td><td>${rows[i][1]}</td><td>${rows[i][2]}</td></tr>`;
+    }
+    table += "</table>";
+    document.getElementById("adminResult").innerHTML = table;
+  } catch (e) {
+    document.getElementById("adminResult").innerText = "Error loading results";
+  }
+}
+
+async function exportCSV() {
+  try {
+    const text = await callApi({ action: "results" });
+    const rows = JSON.parse(text);
+    let csv = "";
+    rows.forEach(r => csv += r.join(",") + "\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Secret_Santa_2025.csv";
+    a.click();
+  } catch (e) {
+    alert("CSV export failed");
+  }
+}
+
+async function resetEvent() {
+  if (!confirm("Reset all data?")) return;
+  try {
+    await callApi({ action: "reset" });
+    document.getElementById("adminResult").innerHTML = "";
+    alert("Reset complete");
+  } catch (e) {
+    alert("Reset failed");
+  }
+}
+</script>
+
+</body>
+</html>
