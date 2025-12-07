@@ -148,13 +148,17 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwGtOXA6QAflVs4M8I4Nm-5
 const ADMIN_PASSWORD = "Santa2025";
 
 async function callApi(payload) {
+  const formBody = new URLSearchParams();
+  formBody.append("data", JSON.stringify(payload));
+
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: formBody
   });
+
   return res.text();
 }
+
 
 async function revealPick() {
   const name = document.getElementById("nameInput").value.trim();
