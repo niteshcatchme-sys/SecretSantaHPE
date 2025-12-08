@@ -181,8 +181,11 @@ async function callApi(payload) {
 
 async function revealPick() {
   const name = document.getElementById("nameInput").value.trim();
-  if (!name) {
-    alert("Please enter your name");
+
+  // ✅ Frontend self-lock using localStorage
+  if (localStorage.getItem("revealed_" + name) === "true") {
+    document.getElementById("userResult").innerText =
+      "🔒 You have already revealed your Secret Santa.";
     return;
   }
 
@@ -203,6 +206,7 @@ async function revealPick() {
       document.getElementById("userResult").innerHTML =
         "🎁 You are Secret Santa for:<br><b>" + result + "</b>";
       confettiBlast();
+      localStorage.setItem("revealed_" + name, "true");
     }
   } catch (e) {
     document.getElementById("userResult").innerText = "Server error. Try again.";
