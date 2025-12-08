@@ -181,22 +181,31 @@ async function callApi(payload) {
 
 async function revealPick() {
   const name = document.getElementById("nameInput").value.trim();
-  if (!name) return;
+  if (!name) {
+    alert("Please enter your name");
+    return;
+  }
 
   document.getElementById("userResult").innerText = "Checking...";
 
-  const result = await callApi({ action: "reveal", name });
+  try {
+    const result = await callApi({ action: "reveal", name });
 
-  if (result === "NOT_FOUND") {
-    document.getElementById("userResult").innerText = "❌ Name not found!";
-  }
-  else if (result === "LOCKED") {
-    document.getElementById("userResult").innerText = "🔒 The reveal is now locked by admin.";
-  }
-  else {
-    document.getElementById("userResult").innerHTML =
-      "🎁 You are Secret Santa for:<br><b>" + result + "</b>";
-    confettiBlast();
+    if (result === "NOT_FOUND") {
+      document.getElementById("userResult").innerText =
+        "❌ Your name was not found. Please contact the admin.";
+    } 
+    else if (result === "LOCKED") {
+      document.getElementById("userResult").innerText =
+        "🔒 You have already revealed your Secret Santa.";
+    } 
+    else {
+      document.getElementById("userResult").innerHTML =
+        "🎁 You are Secret Santa for:<br><b>" + result + "</b>";
+      confettiBlast();
+    }
+  } catch (e) {
+    document.getElementById("userResult").innerText = "Server error. Try again.";
   }
 }
 
