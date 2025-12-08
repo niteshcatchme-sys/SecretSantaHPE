@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>HPE Secret Santa 2025</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       margin: 0;
@@ -16,6 +17,7 @@
       align-items: center;
       overflow-x: hidden;
     }
+
     .snowflake {
       position: fixed;
       top: -10px;
@@ -27,9 +29,11 @@
       z-index: 1;
       user-select: none;
     }
+
     @keyframes fall {
       to { transform: translateY(110vh); }
     }
+
     .confetti {
       position: fixed;
       top: -10px;
@@ -38,9 +42,11 @@
       z-index: 3;
       user-select: none;
     }
+
     @keyframes confetti-fall {
       to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
     }
+
     .card {
       background: rgba(255,255,255,0.95);
       border-radius: 14px;
@@ -51,42 +57,59 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.25);
       z-index: 2;
     }
-    h1 { margin-top: 0; }
-    .date { font-weight: bold; margin-bottom: 20px; }
+
     input, textarea, button {
       padding: 10px;
       margin-top: 10px;
       width: 90%;
       max-width: 360px;
     }
+
     textarea { height: 90px; }
+
     button {
-      cursor: pointer;
       border: none;
       border-radius: 8px;
       background: #006400;
       color: white;
+      cursor: pointer;
     }
+
     button.secondary {
       background: #555;
     }
+
     .result {
       margin-top: 20px;
       font-size: 20px;
       font-weight: bold;
     }
+
     .small-link {
       margin-top: 14px;
       font-size: 12px;
-      color: #555;
       cursor: pointer;
       text-decoration: underline;
+      color: #555;
     }
-    #adminPanel { display: none; margin-top: 20px; }
-    table { border-collapse: collapse; margin: 15px auto; }
-    th, td { border: 1px solid #aaa; padding: 8px 12px; }
+
+    #adminPanel {
+      display: none;
+      margin-top: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 15px auto;
+    }
+
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px 12px;
+    }
   </style>
 </head>
+
 <body>
 
 <script>
@@ -112,14 +135,15 @@
   }
 </script>
 
-<div class="card"> 
-  <img src="HPE Logo.jpg" alt="HPE Logo" style="max-width:180px; margin-bottom:15px; display:block; margin-left:auto; margin-right:auto;">
+<div class="card">
+
+  <img src="HPE Logo.jpg" style="max-width:180px; margin-bottom:15px; display:block; margin-left:auto; margin-right:auto;">
+
   <h1>🎅 Secret Santa 2025 🎄</h1>
-  <div class="date">📅 Event Date: 10th December 2025</div>
+  <div><b>📅 Event Date: 10th December 2025</b></div>
 
   <div id="participantView">
     <input id="nameInput" placeholder="Enter your name">
-    <br>
     <button onclick="revealPick()">Reveal</button>
     <div id="userResult" class="result"></div>
     <div class="small-link" onclick="showAdminLogin()">Admin Login</div>
@@ -127,14 +151,13 @@
 
   <div id="adminLogin" style="display:none;">
     <input type="password" id="adminPassInput" placeholder="Admin Password">
-    <br>
     <button onclick="loginAdmin()">Login</button>
     <button class="secondary" onclick="backToUser()">Cancel</button>
   </div>
 
   <div id="adminPanel">
     <h3>🛠 Admin Panel</h3>
-    <textarea id="participantInput" placeholder="Comma separated names"></textarea><br>
+    <textarea id="participantInput" placeholder="Comma separated names"></textarea>
     <button onclick="generateAssignments()">✅ Generate</button>
     <button onclick="showAdminResults()">📋 View Results</button>
     <button onclick="exportCSV()">⬇️ Export CSV</button>
@@ -145,7 +168,7 @@
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzAHSyJXKqCfTrMg4nLn2E3emdurxfq-OZToyLptEegfDs0Lj1IO8z8J1lswYvVp6_H/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbz8wIed_pMINQE5UKtpj5hggbM1m5VWV8zWhEkixoRRN3Z2aMK8SdsJyl7gKCs4zDh3/exec";
 const ADMIN_PASSWORD = "Santa2025";
 
 async function callApi(payload) {
@@ -156,23 +179,24 @@ async function callApi(payload) {
   return res.text();
 }
 
-
-
 async function revealPick() {
   const name = document.getElementById("nameInput").value.trim();
   if (!name) return;
+
   document.getElementById("userResult").innerText = "Checking...";
-  try {
-    const result = await callApi({ action: "reveal", name });
-    if (result === "NOT_FOUND") {
-      document.getElementById("userResult").innerText = "❌ Name not found!";
-    } else {
-      document.getElementById("userResult").innerHTML =
-        "🎁 You are Secret Santa for:<br><b>" + result + "</b>";
-      confettiBlast();
-    }
-  } catch (e) {
-    document.getElementById("userResult").innerText = "Server error";
+
+  const result = await callApi({ action: "reveal", name });
+
+  if (result === "NOT_FOUND") {
+    document.getElementById("userResult").innerText = "❌ Name not found!";
+  }
+  else if (result === "LOCKED") {
+    document.getElementById("userResult").innerText = "🔒 The reveal is now locked by admin.";
+  }
+  else {
+    document.getElementById("userResult").innerHTML =
+      "🎁 You are Secret Santa for:<br><b>" + result + "</b>";
+    confettiBlast();
   }
 }
 
@@ -188,10 +212,8 @@ function backToUser() {
 
 function loginAdmin() {
   const pass = document.getElementById("adminPassInput").value;
-  if (pass !== ADMIN_PASSWORD) {
-    alert("Wrong password");
-    return;
-  }
+  if (pass !== ADMIN_PASSWORD) return alert("Wrong password");
+
   document.getElementById("adminLogin").style.display = "none";
   document.getElementById("adminPanel").style.display = "block";
 }
@@ -204,57 +226,56 @@ function logoutAdmin() {
 async function generateAssignments() {
   const raw = document.getElementById("participantInput").value;
   const people = raw.split(",").map(x => x.trim()).filter(x => x);
-  if (people.length < 2) return alert("Need at least 2 participants");
+
+  if (people.length < 3) return alert("Minimum 3 participants required");
+
   if (!confirm("Generate new assignments?")) return;
-  try {
-    await callApi({ action: "generate", people });
+
+  const resp = await callApi({ action: "generate", people });
+
+  if (resp === "ERROR_MIN3") {
+    alert("Minimum 3 participants required");
+  } else {
     alert("✅ Assignments generated");
-  } catch (e) {
-    alert("Generate failed");
   }
 }
 
 async function showAdminResults() {
-  try {
-    const text = await callApi({ action: "results" });
-    const rows = JSON.parse(text);
-    let table = "<table><tr><th>Person</th><th>Assigned To</th><th>Revealed</th></tr>";
-    for (let i = 1; i < rows.length; i++) {
-      table += `<tr><td>${rows[i][0]}</td><td>${rows[i][1]}</td><td>${rows[i][2]}</td></tr>`;
-    }
-    table += "</table>";
-    document.getElementById("adminResult").innerHTML = table;
-  } catch (e) {
-    document.getElementById("adminResult").innerText = "Error loading results";
+  const text = await callApi({ action: "results" });
+  const rows = JSON.parse(text);
+
+  let table = "<table><tr><th>Person</th><th>Assigned To</th><th>Revealed</th></tr>";
+
+  for (let i = 1; i < rows.length; i++) {
+    table += `<tr><td>${rows[i][0]}</td><td>${rows[i][1]}</td><td>${rows[i][2]}</td></tr>`;
   }
+
+  table += "</table>";
+  document.getElementById("adminResult").innerHTML = table;
 }
 
 async function exportCSV() {
-  try {
-    const text = await callApi({ action: "results" });
-    const rows = JSON.parse(text);
-    let csv = "";
-    rows.forEach(r => csv += r.join(",") + "\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Secret_Santa_2025.csv";
-    a.click();
-  } catch (e) {
-    alert("CSV export failed");
-  }
+  const text = await callApi({ action: "results" });
+  const rows = JSON.parse(text);
+
+  let csv = "";
+  rows.forEach(r => csv += r.join(",") + "\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Secret_Santa_2025.csv";
+  a.click();
 }
 
 async function resetEvent() {
-  if (!confirm("Reset all data?")) return;
-  try {
-    await callApi({ action: "reset" });
-    document.getElementById("adminResult").innerHTML = "";
-    alert("Reset complete");
-  } catch (e) {
-    alert("Reset failed");
-  }
+  if (!confirm("Reset everything?")) return;
+
+  await callApi({ action: "reset" });
+  document.getElementById("adminResult").innerHTML = "";
+  alert("Reset complete");
 }
 </script>
 
